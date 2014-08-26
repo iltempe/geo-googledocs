@@ -1,6 +1,9 @@
-// Global variables
-var ss = SpreadsheetApp.getActiveSpreadsheet(),
-    sheet = ss.getActiveSheet(),
+// Global variables by pratosmart
+  var ss = SpreadsheetApp.getActive();
+  var sheet = ss.getSheetByName('scraping');
+
+//var ss = SpreadsheetApp.getActiveSpreadsheet(),
+//   sheet = ss.getActiveSheet(),
     activeRange = ss.getActiveRange(),
     settings = {};
     
@@ -74,7 +77,10 @@ function onOpen() {
       name: 'Help',
       functionName: 'helpSite'
   }]);
+  
 }
+
+
 
 // UI to set up GeoJSON export
 function gjDialog() {
@@ -278,7 +284,7 @@ function geocode(e) {
       topRow = activeRange.getRow(),
       lastCol = activeRange.getLastColumn();
 
-  
+      Logger.log(api);  
   // update UI
   updateUiGc();
   
@@ -515,4 +521,39 @@ function cleanCamel(str) {
          .replace(/\s/g, '')
          .replace(/[^\w]/g, '')
          .replace(/^(.)/, function($1) { return $1.toLowerCase(); });
+}
+
+
+//update spreadsheet when form is submitted with a mapquest query: by pratosmart
+function onFormSubmit(e) {
+  
+  Logger.log('Entrato in form submit');
+  if(e.namedValues['Numero']==null && e.namedValues['Via']!=null)
+  {
+      var address = ',' + e.namedValues['Via'] + ',' + e.namedValues['Città'] + ' ' + e.namedValues['Stato'];
+  }else if(e.namedValues['Numero']==null && e.namedValues['Via']==null)
+  {
+     var address = e.namedValues['Città'] + ' ' + e.namedValues['Stato'];
+  
+  } else{
+  
+  var address = e.namedValues['Numero'] + ',' + e.namedValues['Via'] + ',' + e.namedValues['Città'] + ' ' + e.namedValues['Stato'];
+  }
+  Logger.log(address);
+  
+  // Grab the session data again so that we can match it to the user's choices.
+  var response = [];
+  var values = SpreadsheetApp.getActive().getSheetByName('scraping')
+             .getDataRange().getValues();
+
+   response=getApiResponse(address, 'mapquest', '');
+   Logger.log(response['longitude']);
+   Logger.log(response['latitude']);
+   Logger.log(response['accuracy']);
+   
+  var row =  sheet.getLastRow();
+  sheet.getRange(row,6).setValue(response['latitude']);
+  sheet.getRange(row,7).setValue(response['longitude']);
+  sheet.getRange(row,8).setValue(response['accuracy']);
+
 }
